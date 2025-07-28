@@ -30,17 +30,12 @@ function draw() {
   push();
   scale(DISPLAY_ZOOM_FACTOR);
 
-  switch (currentScreen) {
-    case 'battle':
-      drawBattleScreen();
-      break;
-    case 'day':
-      drawDayScreen();
-      break;
-  }
+  // Since there's only one screen, we can call its draw function directly
+  drawBattleScreen();
 
   pop();
   
+  // Check if it's time for an automatic turn
   if (battleActive && !processingBattleEnd && !turnLock && millis() - lastTurnTime > TURN_INTERVAL) {
     takeTurn();
     lastTurnTime = millis();
@@ -48,14 +43,9 @@ function draw() {
 }
 
 function mouseClicked() {
-  if (currentScreen === 'battle') {
-    if (battleActive && !processingBattleEnd && !turnLock) {
-      takeTurn();
-      lastTurnTime = millis();
-    } else {
-        currentScreen = 'day';
-    }
-  } else if (currentScreen === 'day') {
-    currentScreen = 'battle';
+  // A click anywhere will now only attempt to trigger the next turn in the battle
+  if (battleActive && !processingBattleEnd && !turnLock) {
+    takeTurn();
+    lastTurnTime = millis();
   }
 }
