@@ -78,8 +78,7 @@ function updateAndDrawSprites(currentFrontSpriteDrawX, currentBackSpriteDrawX) {
     } else if (backTransitionPhase === 'entering') {
         let elapsedTime = millis() - backTransitionStartTime;
         let progress = constrain(elapsedTime / BACK_TRANSITION_DURATION, 0, 1);
-        // *** THE FIX IS ON THE LINE BELOW ***
-        backCurrentX = lerp(-BACK_SPRITE_W, BACK_SPRITE_BASE_X, progress);
+        backCurrentX = lerp(-BACK_SPRITE_W, BACK_SPRITE_BASE_X, progress); // Corrected variable name
         if (progress === 1) backTransitionPhase = 'idle';
     }
 
@@ -105,31 +104,6 @@ function updateAndDrawSprites(currentFrontSpriteDrawX, currentBackSpriteDrawX) {
     if (frontSprite && drawFront) {
         image(frontSprite, currentFrontSpriteDrawX, frontCurrentY, FRONT_SPRITE_W, FRONT_SPRITE_H);
     }
-}
-
-
-function drawDayScreen() {
-  image(bg, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
-  noFill();
-  stroke(0);
-  strokeWeight(2);
-  rect(DAY_BOX_X, DAY_BOX_Y, DAY_BOX_WIDTH, DAY_BOX_HEIGHT, HP_BAR_RADIUS);
-
-  fill(0);
-  noStroke();
-
-  textSize(DAY_TEXT_SIZE_LABEL);
-  text("DAY:", DAY_BOX_X + DAY_BOX_WIDTH / 2, DAY_BOX_Y + (DAY_TEXT_SIZE_LABEL / 2) + 2);
-
-  textSize(DAY_TEXT_SIZE_DAY);
-  let currentDayIndex = new Date().getDay();
-  const days = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
-  text(days[currentDayIndex], DAY_BOX_X + DAY_BOX_WIDTH / 2, DAY_BOX_Y + DAY_BOX_HEIGHT - (DAY_TEXT_SIZE_DAY / 2) - 2);
-
-  if (showTime) {
-    drawClock();
-  }
 }
 
 function drawNames() {
