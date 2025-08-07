@@ -12,7 +12,8 @@ function preload() {
 
 function setup() {
   pixelDensity(1);
-  createCanvas(CANVAS_WIDTH * DISPLAY_ZOOM_FACTOR, CANVAS_HEIGHT * DISPLAY_ZOOM_FACTOR);
+  // Set the canvas directly to the desired resolution
+  createCanvas(320, 288);
   noSmooth();
   textFont(gameboyFont);
   textAlign(CENTER, CENTER);
@@ -27,14 +28,10 @@ function setup() {
 function draw() {
   background(0);
 
-  push();
-  scale(DISPLAY_ZOOM_FACTOR);
-
-  // Since there's only one screen, we can call its draw function directly
+  // The scaling function is removed, so the canvas is drawn at its full size.
+  // The push() and pop() are no longer needed.
   drawBattleScreen();
 
-  pop();
-  
   // Check if it's time for an automatic turn
   if (battleActive && !processingBattleEnd && !turnLock && millis() - lastTurnTime > TURN_INTERVAL) {
     takeTurn();
