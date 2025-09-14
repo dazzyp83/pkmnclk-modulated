@@ -67,32 +67,24 @@ function startNewBattle() {
     backTransitionPhase = 'exiting';
     backTransitionStartTime = millis();
     setTimeout(() => {
-      loadImage(`back/${backPokemonData.file}`, img => {
-        backSprite = img;
-        backTransitionPhase = 'entering';
-        backTransitionStartTime = millis();
-      });
+      backSprite = backSpriteCache[backPokemonData.file];
+      backTransitionPhase = 'entering';
+      backTransitionStartTime = millis();
     }, BACK_TRANSITION_DURATION);
   } else {
-    loadImage(`back/${backPokemonData.file}`, img => {
-      backSprite = img;
-    });
+    backSprite = backSpriteCache[backPokemonData.file];
   }
 
   if (shouldFrontAnimateExit) {
     frontTransitionPhase = 'exiting';
     frontTransitionStartTime = millis();
     setTimeout(() => {
-      loadImage(`front/${frontPokemonData.file}`, img => {
-        frontSprite = img;
-        frontTransitionPhase = 'entering';
-        frontTransitionStartTime = millis();
-      });
+      frontSprite = frontSpriteCache[frontPokemonData.file];
+      frontTransitionPhase = 'entering';
+      frontTransitionStartTime = millis();
     }, FRONT_TRANSITION_DURATION);
   } else {
-    loadImage(`front/${frontPokemonData.file}`, img => {
-      frontSprite = img;
-    });
+    frontSprite = frontSpriteCache[frontPokemonData.file];
   }
 }
 

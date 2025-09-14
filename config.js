@@ -15,7 +15,7 @@ const CANVAS_HEIGHT = 288;
 const BACK_NAME_END_X    = 298; // 149 * 2
 const BACK_NAME_Y        = 144; // 72 * 2
 const FRONT_NAME_START_X = 22;  // 11 * 2
-const FRONT_NAME_END_X   = 170; // 80 * 2
+const FRONT_NAME_END_X   = 200; // Increased from 170 for longer names
 const FRONT_NAME_Y       = 14;  // 7 * 2
 
 // Sprite dimensions and base positions (scaled by 2x)

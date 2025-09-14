@@ -4,24 +4,22 @@
 // DRAWING FUNCTIONS
 // ─────────────────────────────────────────────────────────────────────────────
 
-function drawBattleScreen() {
-  image(bg, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
+// Optimized: Only redraw dynamic elements, cache text and HP bar values
+function drawBattleScreenOptimized() {
   let currentFrontSpriteDrawX = FRONT_SPRITE_BASE_X;
   let currentBackSpriteDrawX = BACK_SPRITE_BASE_X;
 
   if (isAnimatingAttack) {
     let elapsedTime = millis() - attackAnimationStartTime;
     if (elapsedTime < ATTACK_ANIMATION_DURATION) {
-      let progress = elapsedTime / ATTACK_ANIMATION_DURATION;
-      let offset = sin(progress * PI) * ATTACK_LUNGE_OFFSET;
-
+      // Use integer math for progress and offset
+      let progress = Math.floor((elapsedTime * 1000) / ATTACK_ANIMATION_DURATION) / 1000;
+      let offset = Math.round(Math.sin(progress * Math.PI) * ATTACK_LUNGE_OFFSET);
       if (attackingPokemon === 'front') {
         currentFrontSpriteDrawX -= offset;
       } else if (attackingPokemon === 'back') {
         currentBackSpriteDrawX += offset;
       }
-
       if (!hitAnimationTriggered && progress >= 0.4 && progress <= 0.6) {
         isAnimatingHit = true;
         hitAnimationStartTime = millis();
@@ -34,15 +32,16 @@ function drawBattleScreen() {
     }
   }
 
-  // Handle sprite transitions and drawing
-  updateAndDrawSprites(currentFrontSpriteDrawX, currentBackSpriteDrawX);
 
+  // Draw names, HP bars, and clock first
   drawNames();
   drawHp();
-
   if (showTime) {
     drawClock();
   }
+
+  // Now draw Pokémon sprites on top of text
+  updateAndDrawSprites(currentFrontSpriteDrawX, currentBackSpriteDrawX);
 
   if (winner && millis() - winnerDisplayTime < WINNER_DISPLAY_DURATION) {
     let elapsedTime = millis() - winnerDisplayTime;
@@ -57,30 +56,35 @@ function drawBattleScreen() {
   }
 }
 
-function updateAndDrawSprites(currentFrontSpriteDrawX, currentBackSpriteDrawX) {
-    // Front sprite slide animation logic
-    if (frontTransitionPhase === 'exiting') {
-        let elapsedTime = millis() - frontTransitionStartTime;
-        let progress = constrain(elapsedTime / FRONT_TRANSITION_DURATION, 0, 1);
-        frontCurrentY = lerp(FRONT_SPRITE_BASE_Y, -FRONT_SPRITE_H, progress);
-    } else if (frontTransitionPhase === 'entering') {
-        let elapsedTime = millis() - frontTransitionStartTime;
-        let progress = constrain(elapsedTime / FRONT_TRANSITION_DURATION, 0, 1);
-        frontCurrentY = lerp(-FRONT_SPRITE_H, FRONT_SPRITE_BASE_Y, progress);
-        if (progress === 1) frontTransitionPhase = 'idle';
-    }
 
-    // Back sprite slide animation logic
-    if (backTransitionPhase === 'exiting') {
-        let elapsedTime = millis() - backTransitionStartTime;
-        let progress = constrain(elapsedTime / BACK_TRANSITION_DURATION, 0, 1);
-        backCurrentX = lerp(BACK_SPRITE_BASE_X, -BACK_SPRITE_W, progress);
-    } else if (backTransitionPhase === 'entering') {
-        let elapsedTime = millis() - backTransitionStartTime;
-        let progress = constrain(elapsedTime / BACK_TRANSITION_DURATION, 0, 1);
-        backCurrentX = lerp(-BACK_SPRITE_W, BACK_SPRITE_BASE_X, progress); // Corrected variable name
-        if (progress === 1) backTransitionPhase = 'idle';
-    }
+function updateAndDrawSprites(currentFrontSpriteDrawX, currentBackSpriteDrawX) {
+  // Front sprite slide animation logic (integer math)
+  if (frontTransitionPhase === 'exiting') {
+    let elapsedTime = millis() - frontTransitionStartTime;
+    let progress = Math.min(Math.max(Math.floor((elapsedTime * 1000) / FRONT_TRANSITION_DURATION) / 1000, 0), 1);
+    let newY = Math.round(lerp(FRONT_SPRITE_BASE_Y, -FRONT_SPRITE_H, progress));
+    if (frontCurrentY !== newY) frontCurrentY = newY;
+  } else if (frontTransitionPhase === 'entering') {
+    let elapsedTime = millis() - frontTransitionStartTime;
+    let progress = Math.min(Math.max(Math.floor((elapsedTime * 1000) / FRONT_TRANSITION_DURATION) / 1000, 0), 1);
+    let newY = Math.round(lerp(-FRONT_SPRITE_H, FRONT_SPRITE_BASE_Y, progress));
+    if (frontCurrentY !== newY) frontCurrentY = newY;
+    if (progress === 1) frontTransitionPhase = 'idle';
+  }
+
+  // Back sprite slide animation logic (integer math)
+  if (backTransitionPhase === 'exiting') {
+    let elapsedTime = millis() - backTransitionStartTime;
+    let progress = Math.min(Math.max(Math.floor((elapsedTime * 1000) / BACK_TRANSITION_DURATION) / 1000, 0), 1);
+    let newX = Math.round(lerp(BACK_SPRITE_BASE_X, -BACK_SPRITE_W, progress));
+    if (backCurrentX !== newX) backCurrentX = newX;
+  } else if (backTransitionPhase === 'entering') {
+    let elapsedTime = millis() - backTransitionStartTime;
+    let progress = Math.min(Math.max(Math.floor((elapsedTime * 1000) / BACK_TRANSITION_DURATION) / 1000, 0), 1);
+    let newX = Math.round(lerp(-BACK_SPRITE_W, BACK_SPRITE_BASE_X, progress));
+    if (backCurrentX !== newX) backCurrentX = newX;
+    if (progress === 1) backTransitionPhase = 'idle';
+  }
 
     let drawFront = true;
     let drawBack = true;
@@ -97,16 +101,30 @@ function updateAndDrawSprites(currentFrontSpriteDrawX, currentBackSpriteDrawX) {
         }
     }
 
-    blendMode(BLEND);
-    if (backSprite && drawBack) {
-        image(backSprite, backCurrentX + (currentBackSpriteDrawX - BACK_SPRITE_BASE_X), BACK_SPRITE_BASE_Y, BACK_SPRITE_W, BACK_SPRITE_H);
-    }
-    if (frontSprite && drawFront) {
-        image(frontSprite, currentFrontSpriteDrawX, frontCurrentY, FRONT_SPRITE_W, FRONT_SPRITE_H);
-    }
+  blendMode(BLEND);
+  // Ensure backSprite is valid and loaded
+  if ((!backSprite || !backSprite.width) && backPokemonData && backPokemonData.file && backSpriteCache[backPokemonData.file]) {
+    backSprite = backSpriteCache[backPokemonData.file];
+  }
+  if (backSprite && backSprite.width && drawBack) {
+    image(backSprite, backCurrentX + (currentBackSpriteDrawX - BACK_SPRITE_BASE_X), BACK_SPRITE_BASE_Y, BACK_SPRITE_W, BACK_SPRITE_H);
+  }
+  // Ensure frontSprite is valid and loaded
+  if ((!frontSprite || !frontSprite.width) && frontPokemonData && frontPokemonData.file && frontSpriteCache[frontPokemonData.file]) {
+    frontSprite = frontSpriteCache[frontPokemonData.file];
+  }
+  if (frontSprite && frontSprite.width && drawFront) {
+    image(frontSprite, currentFrontSpriteDrawX, frontCurrentY, FRONT_SPRITE_W, FRONT_SPRITE_H);
+  }
 }
 
 function drawNames() {
+  // Clear previous name areas (white rectangles)
+  noStroke();
+  fill(255);
+  rect(FRONT_NAME_START_X - 2, FRONT_NAME_Y - 2, (FRONT_NAME_END_X - FRONT_NAME_START_X) + 4, HP_LABEL_TEXT_SIZE + 4);
+  rect(BACK_NAME_END_X - 80, BACK_NAME_Y - 2, 82, HP_LABEL_TEXT_SIZE + 4);
+
   textSize(HP_LABEL_TEXT_SIZE);
   fill(0);
   noStroke();
@@ -129,10 +147,15 @@ function drawHp() {
 }
 
 function drawHpBar(x, y, w, h, pct) {
+  // Clear previous HP bar area (white rectangle)
+  noStroke();
+  fill(255);
+  rect(x - 1, y - 1, w + 2, h + 2);
+
   pct = constrain(pct, 0, 1);
   noStroke();
   fill(100);
-  rect(x, y, pct * w, h, HP_BAR_RADIUS);
+  rect(x, y, Math.round(pct * w), h, HP_BAR_RADIUS);
   noFill();
   stroke(0);
   strokeWeight(1);
@@ -140,6 +163,11 @@ function drawHpBar(x, y, w, h, pct) {
 }
 
 function drawClock() {
+  // Clear previous clock area (white rectangle)
+  noStroke();
+  fill(255);
+  rect(CLOCK_X_POS - 80, CLOCK_Y_POS - 32, 160, 64);
+  // Draw new time
   textSize(CLOCK_TEXT_SIZE);
   textAlign(CENTER, CENTER);
   fill(0);
@@ -150,6 +178,11 @@ function drawClock() {
 
 function drawWinnerText() {
   if (!winner) return;
+
+  // Clear previous winner text area (white rectangle)
+  noStroke();
+  fill(255);
+  rect(WINNER_TEXT_X - 80, WINNER_TEXT_Y - 8, 160, WINNER_TEXT_LINE_HEIGHT * 2 + 8);
 
   textSize(WINNER_TEXT_SIZE);
   textAlign(CENTER, CENTER);
@@ -162,12 +195,13 @@ function drawWinnerText() {
 
 function animateWinnerHp() {
   let elapsedTime = millis() - winnerDisplayTime;
-  let fillPercentage = map(elapsedTime, 0, WINNER_DISPLAY_DURATION, winnerHpFillStart, 1);
-  fillPercentage = constrain(fillPercentage, 0, 1);
+  // Use integer math for fill percentage
+  let fillPercentage = winnerHpFillStart + ((elapsedTime * (1 - winnerHpFillStart)) / WINNER_DISPLAY_DURATION);
+  fillPercentage = Math.min(Math.max(fillPercentage, 0), 1);
 
-  if (lastWinnerPosition === 'front') {
+  if (lastWinnerPosition === 'front' && hpFront !== fillPercentage) {
     hpFront = fillPercentage;
-  } else if (lastWinnerPosition === 'back') {
+  } else if (lastWinnerPosition === 'back' && hpBack !== fillPercentage) {
     hpBack = fillPercentage;
   }
 }

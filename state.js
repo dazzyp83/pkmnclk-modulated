@@ -8,6 +8,12 @@
 let bg;
 let pokemonList = [];
 let gameboyFont;
+let staticLayer;
+let lastDrawnTime = null;
+let lastDrawnFrontName = null;
+let lastDrawnBackName = null;
+let lastDrawnHpFront = null;
+let lastDrawnHpBack = null;
 
 // Current battle info
 let frontSprite, backSprite;
