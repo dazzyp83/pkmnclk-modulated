@@ -163,11 +163,7 @@ function drawHpBar(x, y, w, h, pct) {
 }
 
 function drawClock() {
-  // Clear previous clock area (white rectangle)
-  noStroke();
-  fill(255);
-  rect(CLOCK_X_POS - 80, CLOCK_Y_POS - 32, 160, 64);
-  // Draw new time
+  // Draw new time directly over background
   textSize(CLOCK_TEXT_SIZE);
   textAlign(CENTER, CENTER);
   fill(0);
